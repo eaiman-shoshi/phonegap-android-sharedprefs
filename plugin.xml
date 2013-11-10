@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+           id="com.technext.savings"
+      version="0.1.0">
+    <name>AndroidStorage</name>
+    <description>Sample PhoneGap AndroidStorage Plugin</description>
+    <license>MIT</license>
+    <keywords>phonegap,AndroidStorage</keywords>
+ 
+ 
+    <js-module src="www/AndroidStorage.js" name="AndroidStorage">
+        <clobbers target="window.AndroidStorage" />
+    </js-module>
+ 
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="Calendar">
+                <param name="android-package" value="com.technext.savings.AndroidStorage"/>
+            </feature>
+        </config-file>
+ 
+        <source-file src="src/com/technext/savings/AndroidStorage.java" target-dir="src/com/technext/savings" />      
+     </platform>          
+</plugin>
