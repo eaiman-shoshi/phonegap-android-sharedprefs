@@ -1,11 +1,15 @@
 package com.technext.savings;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -13,13 +17,18 @@ import android.util.Log;
 public class AndroidStorage extends CordovaPlugin{
 	private SharedPreferences prefs;
 	private SharedPreferences.Editor editor;
-	private final String SONG_PERCENTAGE = "song_percentage";
 	private final String TAG = "AndroidStorage";
 	private final String ADD_VIDEO_ID = "add_video_id";
 	private final String GET_VIDEO_ID = "get_video_id";
 	private final String REMOVE_VIDEO_ID = "remove_video_id";
+	private final String SONG_PERCENTAGE = "song_percentage";
 	private final String SAVE_SONG_PERCENTAGE = "save_song_percentage";
 	private final String GET_SONG_PERCENTAGE = "get_song_percentage";
+	private final String ADD_PLAYLIST_ITEMS = "add_playlist_item";
+	private final String GET_PLAYLIST_ITEMS = "get_playlist_items";
+	private final String DELETE_PLAYLIST_ITEM = "delete_playlist_item";
+	private final String PLAYLIST = "playlist";
+//	private final String DOWNLOADED = "downloaded";
 	
 	public AndroidStorage(){
 		
@@ -31,7 +40,14 @@ public class AndroidStorage extends CordovaPlugin{
 		editor.commit();
 	}
 	
+	public void initializePlaylist(){
+		prefs = this.cordova.getActivity().getSharedPreferences(PLAYLIST, Context.MODE_PRIVATE);
+		editor = prefs.edit();
+		editor.commit();
+	}
+	
 	public void addVideoId(String video_id){
+		video_id = video_id.replaceAll("\"", "");
 		Log.e(TAG, "adding: "+video_id);
 		editor.putBoolean(video_id, true);
 		editor.commit();
@@ -50,6 +66,7 @@ public class AndroidStorage extends CordovaPlugin{
 	}
 	
 	public void removeVideoId(String video_id){
+		video_id = video_id.replaceAll("\"", "");
 		Log.e(TAG, "removing: "+video_id);
 		editor.remove(video_id);
 		editor.commit();
@@ -67,6 +84,35 @@ public class AndroidStorage extends CordovaPlugin{
 		}catch(Exception e){
 			return 0;
 		}
+	}
+	
+	public void addToPlaylist(String playlist_item){
+		Log.e(TAG, "adding: "+playlist_item);
+		editor.putBoolean(playlist_item, true);
+		editor.commit();
+	}
+	
+	public ArrayList<String> getPlaysitItems(){
+		Set<String> keySet = prefs.getAll().keySet();
+		ArrayList<String> playlist_items = new ArrayList<String>();
+		if(!keySet.isEmpty()){
+			Log.e(TAG, "in getPlaysitItems");
+			int i = 0;
+			Iterator<String> iterator = keySet.iterator();
+			while(iterator.hasNext()){
+				playlist_items.add(iterator.next());
+				Log.e(TAG, "items: "+playlist_items.get(i++));
+			}
+			Log.e(TAG, "in getPlaysitItems");			
+		}
+		Log.e(TAG, "in getPlaysitItems");
+		return playlist_items;
+	}
+	
+	public void removeFromPlaylist(String playlist_item){
+		Log.e(TAG, "removing: "+playlist_item);
+		editor.remove(playlist_item);
+		editor.commit();
 	}
 	
 	@Override
@@ -91,6 +137,26 @@ public class AndroidStorage extends CordovaPlugin{
 		}else if(action.equalsIgnoreCase(GET_SONG_PERCENTAGE)){
 			callbackContext.success(getSongPercentage());
 		    return true;
+		}else if(action.equalsIgnoreCase(ADD_PLAYLIST_ITEMS)){
+			initializePlaylist();
+			addToPlaylist(rawArgs);
+			callbackContext.success();
+			return true;
+		}else if(action.equalsIgnoreCase(DELETE_PLAYLIST_ITEM)){
+			initializePlaylist();
+			removeFromPlaylist(rawArgs);
+			callbackContext.success();
+			return true;
+		}else if(action.equalsIgnoreCase(GET_PLAYLIST_ITEMS)){
+			initializePlaylist();
+			ArrayList<String> playlist_items = getPlaysitItems();
+			if(playlist_items.isEmpty()){
+				callbackContext.success(new JSONArray("[\"null\"]"));
+				return true;
+			}else{
+				callbackContext.success(new JSONArray(playlist_items));
+				return true;
+			}
 		}
 		callbackContext.error("");
 		return false;
