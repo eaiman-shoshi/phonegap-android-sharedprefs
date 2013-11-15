@@ -21,6 +21,7 @@ public class AndroidStorage extends CordovaPlugin{
 	private final String ADD_VIDEO_ID = "add_video_id";
 	private final String GET_VIDEO_ID = "get_video_id";
 	private final String REMOVE_VIDEO_ID = "remove_video_id";
+	private final String QUEUE_SONG_NAME = "queue_song_name";
 	private final String SONG_PERCENTAGE = "song_percentage";
 	private final String SAVE_SONG_PERCENTAGE = "save_song_percentage";
 	private final String GET_SONG_PERCENTAGE = "get_song_percentage";
@@ -46,10 +47,12 @@ public class AndroidStorage extends CordovaPlugin{
 		editor.commit();
 	}
 	
-	public void addVideoId(String video_id){
-		video_id = video_id.replaceAll("\"", "");
+	public void addVideoId(String video_info){
+		String video_id, video_name;
+		video_id = video_info.split(",")[0].replaceAll("\"", "");
+		video_name = video_info.split(",")[1].replaceAll("\"", "");
 		Log.e(TAG, "adding: "+video_id);
-		editor.putBoolean(video_id, true);
+		editor.putString(video_id, video_name);
 		editor.commit();
 	}
 	
@@ -63,6 +66,23 @@ public class AndroidStorage extends CordovaPlugin{
 			Log.e(TAG, "returning: "+vid_id);
 			return vid_id;
 		}
+	}
+	
+	public ArrayList<String> getQueueSongName(){
+		Set<String> keySet = prefs.getAll().keySet();
+		ArrayList<String> song_name = new ArrayList<String>();
+		if(!keySet.isEmpty()){
+			Log.e(TAG, "in getSongNmae");
+			int i = 0;
+			Iterator<String> iterator = keySet.iterator();
+			while(iterator.hasNext()){
+				song_name.add(prefs.getString(iterator.next(), "Unknown"));
+				Log.e(TAG, "items: "+song_name.get(i++));
+			}
+			Log.e(TAG, "in getPlaysitItems");			
+		}
+		Log.e(TAG, "in getPlaysitItems");
+		return song_name;
 	}
 	
 	public void removeVideoId(String video_id){
@@ -155,6 +175,15 @@ public class AndroidStorage extends CordovaPlugin{
 				return true;
 			}else{
 				callbackContext.success(new JSONArray(playlist_items));
+				return true;
+			}
+		}else if(action.equalsIgnoreCase(QUEUE_SONG_NAME)){
+			ArrayList<String> song_names = getQueueSongName();
+			if(song_names.isEmpty()){
+				callbackContext.success(new JSONArray("[\"null\"]"));
+				return true;
+			}else{
+				callbackContext.success(new JSONArray(song_names));
 				return true;
 			}
 		}
